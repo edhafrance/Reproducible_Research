@@ -65,7 +65,7 @@ m<-ggplot(STEPS,aes(x=TOTAL_STEPS))
 m+geom_histogram(breaks=seq(0,21200,by=2000),col="black",fill="green")
 ```
 
-![](Reproducible_Research_files/figure-html/Histogram 1 of Total Number of Steps-1.png) 
+![](PA1_template_files/figure-html/Histogram 1 of Total Number of Steps-1.png) 
 
 ### 6. Code to describe and show a strategy for imputing missing data
 The strategy is to replace NA with average steps using loops as shown in the code.
@@ -100,7 +100,7 @@ n<-ggplot(STEPS2,aes(x=TOTAL_STEPS2))
 n+geom_histogram(breaks=seq(0,21200,by=2000),col="black",fill="pink")
 ```
 
-![](Reproducible_Research_files/figure-html/histogram 2 of Total Number of Steps-1.png) 
+![](PA1_template_files/figure-html/histogram 2 of Total Number of Steps-1.png) 
 
 
 ```r
@@ -129,7 +129,7 @@ PLOT_DATA<-DATA2%>%group_by(interval)%>%summarise(MEAN_EACHINTERVAL=mean(steps))
 plot(PLOT_DATA$interval,PLOT_DATA$MEAN_EACHINTERVAL,type="l",xlab="Time Interval",ylab="Average",main="Average Number Of Steps Taken Across All Days")
 ```
 
-![](Reproducible_Research_files/figure-html/Plot Average Number of Steps Taken Across All Days-1.png) 
+![](PA1_template_files/figure-html/Plot Average Number of Steps Taken Across All Days-1.png) 
 
 ```r
 ## 5. The 5-minute interval that, on average, contains the maximum number of steps
@@ -168,6 +168,6 @@ PLOT_WEEKDAY<-WEEKDAY%>%group_by(interval)%>%summarise(MEAN_EACHINTERVAL2=mean(s
 plot(PLOT_WEEKDAY$interval,PLOT_WEEKDAY$MEAN_EACHINTERVAL2,type="l",xlab="Time Interval",ylab="Average",main="Average Number Of Steps Taken During The Weekday")
 ```
 
-![](Reproducible_Research_files/figure-html/Plot Weekday Only and Weekend Only-1.png) 
+![](PA1_template_files/figure-html/Plot Weekday Only and Weekend Only-1.png) 
 
 ##The end
