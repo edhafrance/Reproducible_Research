@@ -1,0 +1,159 @@
+---
+title: "Storm Project Week2"
+author: "Edward Ha"
+date: "June 4, 2016"
+output: html_document
+---
+
+Course Project 2 - Storm Project
+
+###Synopsis
+The project analyses storms and other severe weather events that can cause both public health and economic problems for communities and municipalities. Data from the U.S. National Oceanic and Atmospheric Administration's (NOAA) storm were used to find out:
+  *Which types of events are most harmful with respect to population health.
+  *Which types of events have the greatest economic consequences.  
+
+  1. The results show that Tornado, Excessive Heat  and Flash Flood cause the most fatalities.
+  2. The results show that Tornado, TSTM wind and Flood cause the most injuries.
+  3. The results show that Flood, Hurricane/Typhone and Tornado have the most impact economically (most   expensive)
+
+###Data Processing
+
+Step 1: Read repdata-data-StormData.csv.bz2 
+```{r Load the data,cache=TRUE, echo=TRUE}
+library("dplyr")
+library(ggplot2)
+setwd("/Users/edwardha/Documents/COURSERA/Reproducible_Research/")
+
+DATA<-read.csv("repdata-data-StormData.csv.bz2", header=TRUE,sep=",", na.strings="NA")
+
+```
+
+
+Step 2: Select fields that are critical to the analysis.
+Economic Health:
+EVTYPE defines event type (e.g. high winds, hurricane, etc.)
+FATALITIES measures harm to human health
+INJURIES measures harm to human health
+
+Economic Consequences:
+PROPDMG measures property damage and hence economic damage in USD
+PROPDMGEXP measures of magnitude of property damage (e.g. thousands, millions USD, etc.)
+CROPDMG measures of crop damage and hence economic damage in USD
+CROPDMGEXP measures magnitude of crop damage (e.g. thousands, millions USD, etc.)
+
+```{r Select fields for analysis,cache=TRUE, echo=TRUE}
+
+#DATA2 for FATALITIES
+DATA2<-DATA%>%select(EVTYPE,FATALITIES)%>%group_by(EVTYPE)%>%summarise(FATALITIES=sum(FATALITIES))%>%
+  arrange(desc(FATALITIES))%>%top_n(n=6)
+DATA2$EVTYPE <- factor(DATA2$EVTYPE, levels = DATA2$EVTYPE[order(DATA2$FATALITIES)])
+
+#DATA3 for INJURIES
+DATA3<-DATA%>%select(EVTYPE,INJURIES)%>%group_by(EVTYPE)%>%summarise(INJURIES=sum(INJURIES))%>%
+  arrange(desc(INJURIES))%>%top_n(n=6)
+DATA3$EVTYPE <- factor(DATA3$EVTYPE, levels = DATA3$EVTYPE[order(DATA3$INJURIES)])
+
+#DATA4 and 5 for ECONOMIC CONSEQUENCES
+
+
+#Transform the data for economic consequences
+DATA4<-DATA%>%select(EVTYPE,PROPDMG,PROPDMGEXP,CROPDMG,CROPDMGEXP)
+DATA4$PROPDMGEXP<-as.character(DATA4$PROPDMGEXP)
+DATA4$CROPDMGEXP<-as.character(DATA4$CROPDMGEXP)
+
+DATA4$PROPDMGEXP[(DATA4$PROPDMGEXP == "")] <- 1
+DATA4$PROPDMGEXP[(DATA4$PROPDMGEXP == "+") | (DATA4$PROPDMGEXP == "-") | (DATA4$PROPDMGEXP == "?")] <- 10
+DATA4$PROPDMGEXP[(DATA4$PROPDMGEXP == "h") | (DATA4$PROPDMGEXP == 
+                                                "H")] <- 100
+DATA4$PROPDMGEXP[(DATA4$PROPDMGEXP == "k") | (DATA4$PROPDMGEXP == 
+                                                "K")] <- 1000
+DATA4$PROPDMGEXP[(DATA4$PROPDMGEXP == "m") | (DATA4$PROPDMGEXP == 
+                                                "M")] <- 1000000
+DATA4$PROPDMGEXP[(DATA4$PROPDMGEXP == "B")] <- 1000000000
+
+DATA4$CROPDMGEXP[(DATA4$CROPDMGEXP == "")] <- 1
+DATA4$CROPDMGEXP[(DATA4$CROPDMGEXP == "+") | (DATA4$CROPDMGEXP == 
+                                                "-") | (DATA4$CROPDMGEXP == "?")] <- 10
+DATA4$CROPDMGEXP[(DATA4$CROPDMGEXP == "h") | (DATA4$CROPDMGEXP == 
+                                                "H")] <- 100
+DATA4$CROPDMGEXP[(DATA4$CROPDMGEXP == "k") | (DATA4$CROPDMGEXP == 
+                                                "K")] <- 1000
+DATA4$CROPDMGEXP[(DATA4$CROPDMGEXP == "m") | (DATA4$CROPDMGEXP == 
+                                                "M")] <- 1000000
+DATA4$CROPDMGEXP[(DATA4$CROPDMGEXP == "B")] <- 1000000000
+
+# convert to integer for computation of next step.
+DATA4$PROPDMGEXP <- as.integer(DATA4$PROPDMGEXP)
+DATA4$CROPDMGEXP <- as.integer(DATA4$CROPDMGEXP)
+
+DATA5<-DATA4%>%select(EVTYPE,PROPDMG,PROPDMGEXP,CROPDMG,CROPDMGEXP)%>%
+  mutate(TOTAL=PROPDMG*PROPDMGEXP+CROPDMGEXP*CROPDMG)%>%group_by(EVTYPE)%>%summarise(TOTAL=sum(TOTAL))%>%
+  arrange(desc(TOTAL))%>%top_n(n=6)
+
+DATA5$EVTYPE <- factor(DATA5$EVTYPE, levels = DATA5$EVTYPE[order(DATA5$TOTAL)])
+
+
+
+
+```
+
+Step 3: Graph # of injuries as a function of weather events.
+```{r Barplot Fatalities, cache=TRUE, echo=TRUE}
+
+#Barplot FATALITIES
+m<-ggplot(DATA2,aes(x=EVTYPE,y=FATALITIES))+geom_bar(stat="identity")+
+  coord_flip()+ggtitle("Number of Fatalities as a function of Weather Events 1950-2011")
+
+```
+
+```{r Barplot Injuries, cache=TRUE, echo=TRUE}
+
+#Barplot INJURIES
+n<-ggplot(DATA3,aes(x=EVTYPE,y=INJURIES))+geom_bar(stat="identity")+
+  coord_flip()+ggtitle("Number of Injuries as a function of Weather Events 1950-2011 ")
+
+```
+
+```{r Barplot Economic Consequences, cache=TRUE, echo=TRUE}
+
+#Barplot ECONOMIC CONSEQUENCES
+p<-ggplot(DATA5,aes(x=EVTYPE,y=TOTAL))+geom_bar(stat="identity")+
+  coord_flip()+ggtitle("Economic Consequences of the top Weather Events 1950-2011")
+
+```
+
+###Results
+
+The barplot below shows that Tornado, Excessive Heat  and Flash Flood cause the most fatalities.
+```{r Results Fatalities, cache=TRUE, echo=TRUE}
+m<-ggplot(DATA2,aes(x=EVTYPE,y=FATALITIES))+geom_bar(stat="identity")+
+  coord_flip()+ggtitle("Number of Fatalities as a function of Weather Events 1950-2011 ")
+
+head(DATA2)
+m
+```
+
+
+
+The barplot below shows that Tornado, TSTM wind and Flood cause the most injuries.
+```{r Results Injuries, cache=TRUE, echo=TRUE}
+n<-ggplot(DATA3,aes(x=EVTYPE,y=INJURIES))+geom_bar(stat="identity")+
+  coord_flip()+ggtitle("Number of Injuries as a function of Weather Events 1950-2011")
+
+head(DATA3)
+n
+```
+
+
+
+The barplot below shows that Flood, Hurricane/Typhoon and Tornado have the most impact economically (most expensive).
+```{r Economic Consequences, cache=TRUE,echo=TRUE}
+p<-ggplot(DATA5,aes(x=EVTYPE,y=TOTAL))+geom_bar(stat="identity")+
+  coord_flip()+ggtitle("Economic Consequences of Weather Events 1950-2011")+ylab("Total $ (Crop+Property Damage)")
+
+head(DATA5)
+p
+```
+
+
+
